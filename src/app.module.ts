@@ -3,6 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { WriteModule } from './write/write.module';
+import { Write } from './write/write.entity';
 
 @Module({
   imports: [
@@ -18,9 +20,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         ssl: {
           rejectUnauthorized: false,
         },
+        entities: [Write],
       }),
       inject: [ConfigService],
     }),
+    WriteModule,
   ],
   controllers: [AppController],
   providers: [AppService],
