@@ -1,11 +1,9 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Write } from './entity/write.entity';
 import { Repository } from 'typeorm';
 import { supabase } from '../supabase';
+import axios from 'axios';
 
 @Injectable()
 export class WriteService {
@@ -17,70 +15,80 @@ export class WriteService {
   private detectExtension(code: string): string {
     if (code.includes('import React') || code.includes('from "react"')) return 'tsx';
     if (code.includes('function') || code.includes('console.log')) return 'js';
-    if (code.includes('def ') || code.includes('import ') && code.includes('print(')) return 'py';
+    if (code.includes('def ') || (code.includes('import ') && code.includes('print('))) return 'py';
     if (code.includes('#include') || code.includes('int main')) return 'cpp';
     if (code.includes('public class') || code.includes('System.out.println')) return 'java';
     if (code.includes('const') || code.includes('type') || code.includes('interface')) return 'ts';
     return 'txt';
   }
 
-  async handleUpload(title: string, code?: string, file?: Express.Multer.File) {
+  private trimIp(ip: string): string {
+    const ipv4Regex = /(\d+\.\d+)(\.\d+\.\d+)?/;
+    const ipv4Match = ip.match(ipv4Regex);
+    
+    if (ip.includes('::ffff:')) {
+
+      const ipv4Part = ip.split('::ffff:')[1];
+      const ipv4TrimMatch = ipv4Part.match(ipv4Regex);
+      if (ipv4TrimMatch && ipv4TrimMatch[1]) return ipv4TrimMatch[1];
+    }
+    if (ipv4Match && ipv4Match[1]) return ipv4Match[1];
+
+    if (ip.includes(':')) {
+      return 'ipv6';
+    }
+    return ip.substring(0, 7);
+  }
+  
+  private async getRealIp(): Promise<string> {
+    try {
+      const response = await axios.get('https://api.ipify.org?format=json');
+      return response.data.ip;
+    } catch (error) {
+      return '0.0.0.0';
+    }
+  }
+
+  async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string) {
     try {
       let saved: Write;
       let type: 'code' | 'file';
       let publicURL: string;
-
+      
       if (code) {
         const ext = this.detectExtension(code);
         const fileName = `${Date.now()}_code.${ext}`;
         const buffer = Buffer.from(code, 'utf-8');
-
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('file')
-          .upload(fileName, buffer, {
-            contentType: 'text/plain',
-          });
-
+          .upload(fileName, buffer, { contentType: 'text/plain' });
         if (uploadError) {
           throw new InternalServerErrorException('텍스트 코드 업로드 실패: ' + uploadError.message);
         }
-
         const { data: urlData } = supabase.storage
           .from('file')
           .getPublicUrl(fileName);
-
         publicURL = urlData.publicUrl;
         type = 'code';
       } else if (file) {
         const fileName = `${Date.now()}_${file.originalname}`;
-
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('file')
-          .upload(fileName, file.buffer, {
-            contentType: file.mimetype,
-          });
-
+          .upload(fileName, file.buffer, { contentType: file.mimetype });
         if (uploadError) {
           throw new InternalServerErrorException('파일 업로드 실패: ' + uploadError.message);
         }
-
         const { data: urlData } = supabase.storage
           .from('file')
           .getPublicUrl(fileName);
-
         publicURL = urlData.publicUrl;
         type = 'file';
       } else {
         throw new InternalServerErrorException('code 또는 file 중 하나는 필요합니다.');
       }
-
-      saved = this.writeRepo.create({
-        title,
-        filePath: publicURL,
-      });
-
+      const trimmedIp = userIp ? this.trimIp(userIp) : null;
+      saved = this.writeRepo.create({ title, filePath: publicURL, userIp: trimmedIp });
       await this.writeRepo.save(saved);
-
       return {
         message: type === 'code' ? '텍스트 코드 저장 완료' : '파일 저장 완료',
         data: {
@@ -89,6 +97,7 @@ export class WriteService {
           type,
           filePath: saved.filePath,
           createdAt: saved.createdAt,
+          userIp: saved.userIp,
         },
       };
     } catch (err) {

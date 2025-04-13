@@ -11,6 +11,9 @@ export class Write {
   @Column({ type: 'text', nullable: true })
   filePath: string | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  userIp: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }
