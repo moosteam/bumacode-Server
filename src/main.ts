@@ -12,6 +12,7 @@ async function bootstrap() {
     .setTitle('딸깍 (bumacode)')
     .setDescription('[@https://github.com/moosteam/bumacode-Server](https://github.com/moosteam/bumacode-Server)')
     .setVersion('1.0')
+    .addTag('Write', '코드, 파일, zip 포함 등록')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
