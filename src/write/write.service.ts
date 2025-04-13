@@ -3,7 +3,7 @@ import {
     InternalServerErrorException,
   } from '@nestjs/common';
   import { InjectRepository } from '@nestjs/typeorm';
-  import { Write } from './write.entity';
+  import { Write } from './entity/write.entity';
   import { Repository } from 'typeorm';
   import { supabase } from '../supabase';
   

@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WriteModule } from './write/write.module';
-import { Write } from './write/write.entity';
+import { Write } from './write/entity/write.entity';
 
 @Module({
   imports: [
