@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Write } from './entity/write.entity';
 import { Repository } from 'typeorm';
 import { supabase } from '../supabase';
-import axios from 'axios';
 
 @Injectable()
 export class WriteService {
@@ -23,30 +22,11 @@ export class WriteService {
   }
 
   private trimIp(ip: string): string {
-    const ipv4Regex = /(\d+\.\d+)(\.\d+\.\d+)?/;
-    const ipv4Match = ip.match(ipv4Regex);
-    
     if (ip.includes('::ffff:')) {
-
-      const ipv4Part = ip.split('::ffff:')[1];
-      const ipv4TrimMatch = ipv4Part.match(ipv4Regex);
-      if (ipv4TrimMatch && ipv4TrimMatch[1]) return ipv4TrimMatch[1];
+      return ip.split('::ffff:')[1];
     }
-    if (ipv4Match && ipv4Match[1]) return ipv4Match[1];
-
-    if (ip.includes(':')) {
-      return 'ipv6';
-    }
-    return ip.substring(0, 7);
-  }
-  
-  private async getRealIp(): Promise<string> {
-    try {
-      const response = await axios.get('https://api.ipify.org?format=json');
-      return response.data.ip;
-    } catch (error) {
-      return '0.0.0.0';
-    }
+    
+    return ip;
   }
 
   async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string) {
@@ -54,7 +34,6 @@ export class WriteService {
       let saved: Write;
       let type: 'code' | 'file';
       let publicURL: string;
-      
       if (code) {
         const ext = this.detectExtension(code);
         const fileName = `${Date.now()}_code.${ext}`;
@@ -86,8 +65,8 @@ export class WriteService {
       } else {
         throw new InternalServerErrorException('code 또는 file 중 하나는 필요합니다.');
       }
-      const trimmedIp = userIp ? this.trimIp(userIp) : null;
-      saved = this.writeRepo.create({ title, filePath: publicURL, userIp: trimmedIp });
+      const fullIp = userIp ? this.trimIp(userIp) : null;
+      saved = this.writeRepo.create({ title, filePath: publicURL, userIp: fullIp });
       await this.writeRepo.save(saved);
       return {
         message: type === 'code' ? '텍스트 코드 저장 완료' : '파일 저장 완료',
