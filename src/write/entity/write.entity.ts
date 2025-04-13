@@ -9,9 +9,6 @@ export class Write {
   title: string;
 
   @Column({ type: 'text', nullable: true })
-  code: string | null;
-
-  @Column({ type: 'text', nullable: true })
   filePath: string | null;
 
   @CreateDateColumn()
