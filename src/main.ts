@@ -13,6 +13,7 @@ async function bootstrap() {
     .setDescription('[@https://github.com/moosteam/bumacode-Server](https://github.com/moosteam/bumacode-Server)')
     .setVersion('1.0')
     .addTag('Write', '코드, 파일, zip 포함 등록')
+    .addTag('Write-Get', '데이터베이스에 저장된 코드, 파일 등의 정보를 가져옵니다.')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
