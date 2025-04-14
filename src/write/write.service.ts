@@ -22,6 +22,10 @@ export class WriteService {
   }
 
   private trimIp(ip: string): string {
+    if (ip.includes(',')) {
+      ip = ip.split(',')[0].trim();
+    }
+    
     if (ip.includes('::ffff:')) {
       return ip.split('::ffff:')[1];
     }

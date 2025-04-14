@@ -11,6 +11,7 @@ import axios from 'axios';
 @Controller('write')
 export class WriteController {
   constructor(private readonly writeService: WriteService) {}
+  
   private async getRealIp(req: Request): Promise<string> {
     let ip = req.headers['x-forwarded-for'] || 
              req.headers['x-real-ip'] || 
@@ -20,6 +21,11 @@ export class WriteController {
     if (Array.isArray(ip)) {
       ip = ip[0];
     }
+    
+    if (typeof ip === 'string' && ip.includes(',')) {
+      ip = ip.split(',')[0].trim();
+    }
+    
     if (!ip || ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') {
       try {
         const response = await axios.get('https://api.ipify.org?format=json');

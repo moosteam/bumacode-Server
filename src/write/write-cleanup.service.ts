@@ -17,6 +17,7 @@ export class WriteCleanupService {
     const now = new Date();
     const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
     const threshold = new Date(kstNow.getTime() - 20 * 60 * 1000);
+    
     const expired = await this.writeRepo.find({
       where: { createdAt: LessThan(threshold) },
     });
