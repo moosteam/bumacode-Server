@@ -16,6 +16,9 @@ export class Write {
 
   @Column({ type: 'timestamp' })
   createdAt: Date;
+  
+  @Column({ type: 'varchar', default: 'file' })
+  fileType: string;
 
   @BeforeInsert()
   setCreatedAt() {

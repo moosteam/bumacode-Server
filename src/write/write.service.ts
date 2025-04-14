@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Write } from './entity/write.entity';
 import { Repository } from 'typeorm';
 import { supabase } from '../supabase';
+import * as path from 'path';
 
 @Injectable()
 export class WriteService {
@@ -49,10 +50,24 @@ export class WriteService {
     });
   }
 
+  private isZipFile(file: Express.Multer.File): boolean {
+    const extension = path.extname(file.originalname).toLowerCase();
+    if (extension === '.zip') return true;
+    
+    const zipMimeTypes = [
+      'application/zip', 
+      'application/x-zip-compressed', 
+      'application/x-zip',
+      'multipart/x-zip'
+    ];
+    return zipMimeTypes.includes(file.mimetype);
+  }
+
   async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string) {
     try {
-      let type: 'code' | 'file';
+      let type: 'file' | 'zip';
       let publicURL: string;
+      
       if (code) {
         const ext = this.detectExtension(code);
         const fileName = `${Date.now()}_code.${ext}`;
@@ -67,9 +82,11 @@ export class WriteService {
           .from('file')
           .getPublicUrl(fileName);
         publicURL = urlData.publicUrl;
-        type = 'code';
+        type = 'file';
       } else if (file) {
+        const isZip = this.isZipFile(file);
         const fileName = `${Date.now()}_${file.originalname}`;
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('file')
           .upload(fileName, file.buffer, { contentType: file.mimetype });
@@ -79,8 +96,9 @@ export class WriteService {
         const { data: urlData } = supabase.storage
           .from('file')
           .getPublicUrl(fileName);
+        
         publicURL = urlData.publicUrl;
-        type = 'file';
+        type = isZip ? 'zip' : 'file';
       } else {
         throw new InternalServerErrorException('code 또는 file 중 하나는 필요합니다.');
       }
@@ -88,10 +106,10 @@ export class WriteService {
       const fullIp = userIp ? this.trimIp(userIp) : null;
       
       const result = await this.writeRepo.query(
-        `INSERT INTO "write" (title, "filePath", "userIp", "createdAt") 
-         VALUES ($1, $2, $3, (now() AT TIME ZONE 'Asia/Seoul'))
-         RETURNING id, title, "filePath", "userIp", "createdAt"`,
-        [title, publicURL, fullIp]
+        `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType") 
+         VALUES ($1, $2, $3, (now() AT TIME ZONE 'Asia/Seoul'), $4)
+         RETURNING id, title, "filePath", "userIp", "createdAt", "fileType"`,
+        [title, publicURL, fullIp, type]
       );
       
       if (!result || result.length === 0) {
@@ -101,11 +119,11 @@ export class WriteService {
       const savedData = result[0];
       
       return {
-        message: type === 'code' ? '텍스트 코드 저장 완료' : '파일 저장 완료',
+        message: type === 'zip' ? 'ZIP 파일 저장 완료' : '파일 저장 완료',
         data: {
           id: savedData.id,
           title: savedData.title,
-          type,
+          type: savedData.fileType,
           filePath: savedData.filePath,
           createdAt: this.formatToKoreanTime(savedData.createdAt),
           userIp: savedData.userIp,
