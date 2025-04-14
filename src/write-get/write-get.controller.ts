@@ -8,7 +8,7 @@ export class WriteGetController {
   constructor(private readonly writeGetService: WriteGetService) {}
 
   @Get()
-  @ApiOperation({ summary: '업로드된 코드 전체 목록 조회 (페이징 없이)' })
+  @ApiOperation({ summary: '업로드된 코드 전체 목록 조회' })
   @ApiResponse({
     status: 200,
     description: '조회 성공',

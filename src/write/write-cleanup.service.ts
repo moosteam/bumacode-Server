@@ -14,7 +14,9 @@ export class WriteCleanupService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async cleanupOldEntries() {
-    const threshold = new Date(Date.now() - 20 * 60 * 1000);
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const threshold = new Date(kstNow.getTime() - 20 * 60 * 1000);
     const expired = await this.writeRepo.find({
       where: { createdAt: LessThan(threshold) },
     });

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from 'typeorm';
 
 @Entity()
 export class Write {
@@ -14,6 +14,11 @@ export class Write {
   @Column({ type: 'varchar', nullable: true })
   userIp: string | null;
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp' })
   createdAt: Date;
+
+  @BeforeInsert()
+  setCreatedAt() {
+    this.createdAt = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+  }
 }
