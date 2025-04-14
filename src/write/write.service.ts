@@ -65,7 +65,7 @@ export class WriteService {
           .from('file')
           .getPublicUrl(fileName);
         publicURL = urlData.publicUrl;
-        type = 'file';
+        type = 'file'; 
       } else {
         throw new InternalServerErrorException('code 또는 file 중 하나는 필요합니다.');
       }
