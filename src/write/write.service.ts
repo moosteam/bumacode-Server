@@ -9,7 +9,10 @@ export class WriteService {
   constructor(
     @InjectRepository(Write)
     private writeRepo: Repository<Write>,
-  ) {}
+  ) {
+    this.writeRepo.query("SET timezone = 'Asia/Seoul';").catch(err => {
+    });
+  }
 
   private detectExtension(code: string): string {
     if (code.includes('import React') || code.includes('from "react"')) return 'tsx';
@@ -33,9 +36,21 @@ export class WriteService {
     return ip;
   }
 
+  private formatToKoreanTime(date: Date): string {
+    return new Date(date).toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
+
   async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string) {
     try {
-      let saved: Write;
       let type: 'code' | 'file';
       let publicURL: string;
       if (code) {
@@ -65,26 +80,40 @@ export class WriteService {
           .from('file')
           .getPublicUrl(fileName);
         publicURL = urlData.publicUrl;
-        type = 'file'; 
+        type = 'file';
       } else {
         throw new InternalServerErrorException('code 또는 file 중 하나는 필요합니다.');
       }
+      
       const fullIp = userIp ? this.trimIp(userIp) : null;
-      saved = this.writeRepo.create({ title, filePath: publicURL, userIp: fullIp });
-      await this.writeRepo.save(saved);
+      
+      const result = await this.writeRepo.query(
+        `INSERT INTO "write" (title, "filePath", "userIp", "createdAt") 
+         VALUES ($1, $2, $3, (now() AT TIME ZONE 'Asia/Seoul'))
+         RETURNING id, title, "filePath", "userIp", "createdAt"`,
+        [title, publicURL, fullIp]
+      );
+      
+      if (!result || result.length === 0) {
+        throw new InternalServerErrorException('데이터 저장 실패');
+      }
+      
+      const savedData = result[0];
+      
       return {
         message: type === 'code' ? '텍스트 코드 저장 완료' : '파일 저장 완료',
         data: {
-          id: saved.id,
-          title: saved.title,
+          id: savedData.id,
+          title: savedData.title,
           type,
-          filePath: saved.filePath,
-          createdAt: saved.createdAt,
-          userIp: saved.userIp,
+          filePath: savedData.filePath,
+          createdAt: this.formatToKoreanTime(savedData.createdAt),
+          userIp: savedData.userIp,
         },
       };
     } catch (err) {
-      throw new InternalServerErrorException('파일 업로드 중 문제가 발생했습니다.');
+      console.error('업로드 에러:', err);
+      throw new InternalServerErrorException('파일 업로드 중 문제가 발생했습니다: ' + (err.message || JSON.stringify(err)));
     }
   }
 }
