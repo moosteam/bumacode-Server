@@ -25,6 +25,8 @@ export class WriteGetController {
               filePath: { type: 'string' },
               userIp: { type: 'string' },
               createdAt: { type: 'string', format: 'date-time' },
+              fileType: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(일반 파일 또는 ZIP)' },
+              type: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(fileType과 동일)' }
             },
           },
         },
@@ -55,6 +57,8 @@ export class WriteGetController {
         filePath: { type: 'string' },
         userIp: { type: 'string' },
         createdAt: { type: 'string', format: 'date-time' },
+        fileType: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(일반 파일 또는 ZIP)' },
+        type: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(fileType과 동일)' }
       },
     },
   })
