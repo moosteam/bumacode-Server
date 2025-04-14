@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WriteModule } from './write/write.module';
 import { Write } from './write/entity/write.entity';
+import { WriteGetModule } from './write-get/write-get.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { Write } from './write/entity/write.entity';
       inject: [ConfigService],
     }),
     WriteModule,
+    WriteGetModule,
   ],
   controllers: [AppController],
   providers: [AppService],
