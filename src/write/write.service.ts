@@ -107,7 +107,7 @@ export class WriteService {
       
       const result = await this.writeRepo.query(
         `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType") 
-         VALUES ($1, $2, $3, (now() AT TIME ZONE 'Asia/Seoul'), $4)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', $4)
          RETURNING id, title, "filePath", "userIp", "createdAt", "fileType"`,
         [title, publicURL, fullIp, type]
       );

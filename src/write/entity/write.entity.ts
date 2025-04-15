@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Write {
@@ -19,9 +19,4 @@ export class Write {
   
   @Column({ type: 'varchar', default: 'file' })
   fileType: string;
-
-  @BeforeInsert()
-  setCreatedAt() {
-    this.createdAt = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
-  }
 }
