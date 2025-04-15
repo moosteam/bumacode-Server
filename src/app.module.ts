@@ -7,6 +7,7 @@ import { WriteModule } from './write/write.module';
 import { Write } from './write/entity/write.entity';
 import { WriteGetModule } from './write-get/write-get.module';
 import { Connection } from 'typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { Connection } from 'typeorm';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     WriteModule,
     WriteGetModule,
   ],
