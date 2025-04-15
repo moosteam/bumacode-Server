@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
 
+process.env.TZ = 'Asia/Seoul';
+
 dotenv.config();
 
 async function bootstrap() {

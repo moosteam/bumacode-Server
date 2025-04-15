@@ -11,7 +11,8 @@ export class WriteGetService {
   ) {}
 
   private formatToKoreanTime(date: Date): string {
-    return new Date(date).toLocaleString('ko-KR', {
+    const koreanDate = new Date(date);
+    return koreanDate.toLocaleString('ko-KR', {
       timeZone: 'Asia/Seoul',
       year: 'numeric',
       month: '2-digit',
@@ -54,7 +55,7 @@ export class WriteGetService {
           "filePath", 
           "userIp", 
           "fileType",
-          to_char("createdAt", 'YYYY-MM-DD HH24:MI:SS.US') as "createdAt"
+          "createdAt"
         FROM "write"
         ORDER BY "createdAt" DESC
       `);
@@ -81,7 +82,7 @@ export class WriteGetService {
           "filePath", 
           "userIp", 
           "fileType",
-          to_char("createdAt", 'YYYY-MM-DD HH24:MI:SS.US') as "createdAt"
+          "createdAt"
         FROM "write"
         WHERE id = $1
       `, [id]);
