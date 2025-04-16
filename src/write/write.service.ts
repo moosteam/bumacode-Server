@@ -63,9 +63,21 @@ export class WriteService {
     return zipMimeTypes.includes(file.mimetype);
   }
 
+  private isBinaryFile(file: Express.Multer.File): boolean {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const binaryExtensions = [
+      '.unitypackage', '.xlsx', '.xls', '.doc', '.docx', '.pdf',
+      '.rar', '.7z', '.exe', '.dll', '.so', '.dylib',
+      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg',
+      '.mp3', '.mp4', '.wav', '.avi', '.mov', '.wmv',
+      '.psd', '.ai', '.sketch'
+    ];
+    return binaryExtensions.includes(extension);
+  }
+
   async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string) {
     try {
-      let type: 'file' | 'zip';
+      let type: 'file' | 'zip' | 'binary';
       let publicURL: string;
       
       if (code) {
@@ -85,6 +97,7 @@ export class WriteService {
         type = 'file';
       } else if (file) {
         const isZip = this.isZipFile(file);
+        const isBinary = this.isBinaryFile(file);
         const fileName = `${Date.now()}_${file.originalname}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -98,7 +111,7 @@ export class WriteService {
           .getPublicUrl(fileName);
         
         publicURL = urlData.publicUrl;
-        type = isZip ? 'zip' : 'file';
+        type = isZip ? 'zip' : (isBinary ? 'binary' : 'file');
       } else {
         throw new InternalServerErrorException('code 또는 file 중 하나는 필요합니다.');
       }
@@ -119,7 +132,7 @@ export class WriteService {
       const savedData = result[0];
       
       return {
-        message: type === 'zip' ? 'ZIP 파일 저장 완료' : '파일 저장 완료',
+        message: type === 'zip' ? 'ZIP 파일 저장 완료' : (type === 'binary' ? '바이너리 파일 저장 완료' : '파일 저장 완료'),
         data: {
           id: savedData.id,
           title: savedData.title,

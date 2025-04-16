@@ -18,5 +18,5 @@ export class Write {
   createdAt: Date;
   
   @Column({ type: 'varchar', default: 'file' })
-  fileType: string;
+  fileType: 'file' | 'zip' | 'binary';
 }
