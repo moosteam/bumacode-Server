@@ -66,11 +66,26 @@ export class WriteService {
   private isBinaryFile(file: Express.Multer.File): boolean {
     const extension = path.extname(file.originalname).toLowerCase();
     const binaryExtensions = [
-      '.unitypackage', '.xlsx', '.xls', '.doc', '.docx', '.pdf',
-      '.rar', '.7z', '.exe', '.dll', '.so', '.dylib',
-      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg',
-      '.mp3', '.mp4', '.wav', '.avi', '.mov', '.wmv',
-      '.psd', '.ai', '.sketch'
+      '.unitypackage', '.xlsx', '.xls', '.xlsm', '.doc', '.docx', '.pdf',
+      '.ppt', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.txt',
+      '.rar', '.7z', '.zip', '.tar', '.gz', '.bz2', '.iso', '.dmg',
+      '.exe', '.dll', '.so', '.dylib', '.msi', '.deb', '.rpm', '.apk',
+      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg', '.webp',
+      '.tiff', '.psd', '.ai', '.sketch', '.eps', '.raw', '.cr2', '.nef',
+      '.mp3', '.mp4', '.wav', '.avi', '.mov', '.wmv', '.flv', '.mkv',
+      '.webm', '.m4v', '.3gp', '.mpeg', '.mpg', '.vob', '.swf',
+      '.stl', '.dwg', '.dxf', '.3mf', '.obj', '.fbx', '.3ds', '.max',
+      '.blend', '.ma', '.mb', '.lwo', '.ply', '.gltf', '.glb',
+      '.db', '.sqlite', '.mdb', '.accdb', '.frm', '.myd', '.myi',
+      '.vdi', '.vmdk', '.vhd', '.vhdx', '.qcow2', '.img', '.bin',
+      '.dat', '.bin', '.pak', '.pak2', '.pak3', '.pak4', '.pak5',
+      '.pak6', '.pak7', '.pak8', '.pak9', '.pak10', '.pak11', '.pak12',
+      '.pak13', '.pak14', '.pak15', '.pak16', '.pak17', '.pak18', '.pak19',
+      '.pak20', '.pak21', '.pak22', '.pak23', '.pak24', '.pak25', '.pak26',
+      '.pak27', '.pak28', '.pak29', '.pak30', '.pak31', '.pak32', '.pak33',
+      '.pak34', '.pak35', '.pak36', '.pak37', '.pak38', '.pak39', '.pak40',
+      '.pak41', '.pak42', '.pak43', '.pak44', '.pak45', '.pak46', '.pak47',
+      '.pak48', '.pak49', '.pak50'
     ];
     return binaryExtensions.includes(extension);
   }
