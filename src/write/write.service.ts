@@ -50,6 +50,13 @@ export class WriteService {
     });
   }
 
+  private sanitizeFilename(filename: string): string {
+    const ext = path.extname(filename);
+    const name = path.basename(filename, ext);
+    const sanitized = name.replace(/[^a-zA-Z0-9]/g, '');
+    return `${Date.now()}${sanitized}${ext}`;
+  }
+
   private isZipFile(file: Express.Multer.File): boolean {
     const extension = path.extname(file.originalname).toLowerCase();
     if (extension === '.zip') return true;
@@ -97,7 +104,7 @@ export class WriteService {
       
       if (code) {
         const ext = this.detectExtension(code);
-        const fileName = `${Date.now()}_code.${ext}`;
+        const fileName = this.sanitizeFilename(`code.${ext}`);
         const buffer = Buffer.from(code, 'utf-8');
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('file')
@@ -113,7 +120,7 @@ export class WriteService {
       } else if (file) {
         const isZip = this.isZipFile(file);
         const isBinary = this.isBinaryFile(file);
-        const fileName = `${Date.now()}_${file.originalname}`;
+        const fileName = this.sanitizeFilename(file.originalname);
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('file')
