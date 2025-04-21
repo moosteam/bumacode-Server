@@ -33,6 +33,12 @@ export class WriteGetService {
       result.createdAt = this.formatToKoreanTime(result.createdAt);
     }
     
+    if (result.expireAt) {
+      result.expireAt = this.formatToKoreanTime(result.expireAt);
+    } else {
+      result.expireAt = '영구보존';
+    }
+    
     if (!result.fileType) {
       result.fileType = 'file';
     }
@@ -55,7 +61,8 @@ export class WriteGetService {
           "filePath", 
           "userIp", 
           "fileType",
-          "createdAt"
+          "createdAt",
+          "expireAt"
         FROM "write"
         ORDER BY "createdAt" DESC
       `);
@@ -82,7 +89,8 @@ export class WriteGetService {
           "filePath", 
           "userIp", 
           "fileType",
-          "createdAt"
+          "createdAt",
+          "expireAt"
         FROM "write"
         WHERE id = $1
       `, [id]);

@@ -25,8 +25,9 @@ export class WriteGetController {
               filePath: { type: 'string' },
               userIp: { type: 'string' },
               createdAt: { type: 'string', format: 'date-time' },
-              fileType: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(일반 파일 또는 ZIP)' },
-              type: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(fileType과 동일)' }
+              expireAt: { type: 'string', description: '만료 시간 (영구보존 또는 한국 시간)' },
+              fileType: { type: 'string', enum: ['file', 'zip', 'binary'], description: '파일 유형' },
+              type: { type: 'string', enum: ['file', 'zip', 'binary'], description: '파일 유형(fileType과 동일)' }
             },
           },
         },
@@ -57,8 +58,9 @@ export class WriteGetController {
         filePath: { type: 'string' },
         userIp: { type: 'string' },
         createdAt: { type: 'string', format: 'date-time' },
-        fileType: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(일반 파일 또는 ZIP)' },
-        type: { type: 'string', enum: ['file', 'zip'], description: '파일 유형(fileType과 동일)' }
+        expireAt: { type: 'string', description: '만료 시간 (영구보존 또는 한국 시간)' },
+        fileType: { type: 'string', enum: ['file', 'zip', 'binary'], description: '파일 유형' },
+        type: { type: 'string', enum: ['file', 'zip', 'binary'], description: '파일 유형(fileType과 동일)' }
       },
     },
   })
