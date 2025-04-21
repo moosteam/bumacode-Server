@@ -4,6 +4,7 @@ import { Write } from './entity/write.entity';
 import { Repository } from 'typeorm';
 import { supabase } from '../supabase';
 import * as path from 'path';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class WriteService {
@@ -98,7 +99,39 @@ export class WriteService {
     return binaryExtensions.includes(extension);
   }
 
-  async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string) {
+  private calculateExpireAt(expireMinutes: number): Date | null {
+    if (expireMinutes === 0) return null; // 영구보존
+    const now = new Date();
+    return new Date(now.getTime() + expireMinutes * 60000); // 분을 밀리초로 변환
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async deleteExpiredItems() {
+    try {
+      const now = new Date();
+      const expiredItems = await this.writeRepo
+        .createQueryBuilder('write')
+        .where('write.expireAt IS NOT NULL')
+        .andWhere('write.expireAt <= :now', { now })
+        .getMany();
+
+      for (const item of expiredItems) {
+        if (item.filePath) {
+          const fileName = item.filePath.split('/').pop();
+          if (fileName) {
+            await supabase.storage
+              .from('file')
+              .remove([fileName]);
+          }
+        }
+        await this.writeRepo.remove(item);
+      }
+    } catch (error) {
+      console.error('만료된 항목 삭제 중 오류 발생:', error);
+    }
+  }
+
+  async handleUpload(title: string, code?: string, file?: Express.Multer.File, userIp?: string, expireMinutes: number = 20) {
     try {
       let type: 'file' | 'zip' | 'binary';
       let publicURL: string;
@@ -140,12 +173,13 @@ export class WriteService {
       }
       
       const fullIp = userIp ? this.trimIp(userIp) : null;
+      const expireAt = this.calculateExpireAt(expireMinutes);
       
       const result = await this.writeRepo.query(
-        `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType") 
-         VALUES ($1, $2, $3, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', $4)
-         RETURNING id, title, "filePath", "userIp", "createdAt", "fileType"`,
-        [title, publicURL, fullIp, type]
+        `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType", "expireAt") 
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', $4, $5)
+         RETURNING id, title, "filePath", "userIp", "createdAt", "fileType", "expireAt"`,
+        [title, publicURL, fullIp, type, expireAt]
       );
       
       if (!result || result.length === 0) {
@@ -163,6 +197,7 @@ export class WriteService {
           filePath: savedData.filePath,
           createdAt: this.formatToKoreanTime(savedData.createdAt),
           userIp: savedData.userIp,
+          expireAt: savedData.expireAt ? this.formatToKoreanTime(savedData.expireAt) : '영구보존',
         },
       };
     } catch (err) {

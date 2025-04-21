@@ -16,6 +16,9 @@ export class Write {
 
   @Column({ type: 'timestamp' })
   createdAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  expireAt: Date | null;
   
   @Column({ type: 'varchar', default: 'file' })
   fileType: 'file' | 'zip' | 'binary';

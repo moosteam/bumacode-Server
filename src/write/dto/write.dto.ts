@@ -13,4 +13,13 @@ export class WriteDto {
     format: 'binary',
   })
   file?: any;
+
+  @ApiPropertyOptional({ 
+    description: '만료 시간 (분 단위, 0이면 영구보존, 최대 1440분(24시간), 기본값 20분)',
+    example: 20,
+    default: 20,
+    minimum: 0,
+    maximum: 1440
+  })
+  expireMinutes?: number;
 }

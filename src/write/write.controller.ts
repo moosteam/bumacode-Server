@@ -51,8 +51,17 @@ export class WriteController {
     if (body.code && file) {
       throw new BadRequestException('code와 file은 동시에 보낼 수 없습니다.');
     }
+    if (body.expireMinutes !== undefined && (body.expireMinutes < 0 || body.expireMinutes > 1440)) {
+      throw new BadRequestException('만료 시간은 0(영구보존)에서 1440분(24시간) 사이여야 합니다.');
+    }
     const userIp = await this.getRealIp(req);
     
-    return this.writeService.handleUpload(body.title, body.code, file, userIp);
+    return this.writeService.handleUpload(
+      body.title, 
+      body.code, 
+      file, 
+      userIp,
+      body.expireMinutes
+    );
   }
 }
