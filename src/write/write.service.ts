@@ -96,7 +96,56 @@ export class WriteService {
       '.pak41', '.pak42', '.pak43', '.pak44', '.pak45', '.pak46', '.pak47',
       '.pak48', '.pak49', '.pak50'
     ];
-    return binaryExtensions.includes(extension);
+    
+    // 파일 확장자로 먼저 확인
+    if (binaryExtensions.includes(extension)) {
+      return true;
+    }
+    
+    // MIME 타입으로 추가 확인
+    const binaryMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+      'application/vnd.ms-excel', // xls
+      'application/msword', // doc
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+      'application/pdf',
+      'application/vnd.ms-powerpoint', // ppt
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+      'application/octet-stream',
+      'application/x-msdownload',
+      'application/x-msdos-program',
+      'application/x-msi',
+      'application/x-ms-shortcut',
+      'application/x-ms-wmd',
+      'application/x-ms-wmz',
+      'application/x-ms-xbap',
+      'application/x-msaccess',
+      'application/x-msbinder',
+      'application/x-mscardfile',
+      'application/x-msclip',
+      'application/x-msdownload',
+      'application/x-msmediaview',
+      'application/x-msmetafile',
+      'application/x-msmoney',
+      'application/x-mspublisher',
+      'application/x-msschedule',
+      'application/x-msterminal',
+      'application/x-mswrite',
+      'application/x-msaccess',
+      'application/x-msbinder',
+      'application/x-mscardfile',
+      'application/x-msclip',
+      'application/x-msdownload',
+      'application/x-msmediaview',
+      'application/x-msmetafile',
+      'application/x-msmoney',
+      'application/x-mspublisher',
+      'application/x-msschedule',
+      'application/x-msterminal',
+      'application/x-mswrite'
+    ];
+    
+    return binaryMimeTypes.includes(file.mimetype);
   }
 
   private calculateExpireAt(expireMinutes: number): Date | null {

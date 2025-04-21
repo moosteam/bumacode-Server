@@ -39,7 +39,7 @@ export class WriteGetService {
       result.expireAt = '영구보존됨';
     }
     
-    if (!result.fileType) {
+    if (!result.fileType || !['file', 'zip', 'binary'].includes(result.fileType)) {
       result.fileType = 'file';
     }
     
