@@ -15,7 +15,9 @@ export class WriteDto {
   file?: any;
 
   @ApiPropertyOptional({ 
-    description: '만료 시간 (분 단위, 0이면 영구보존, 최대 1440분(24시간), 기본값 20분)',
+    description: '만료 시간 (분 단위, 0이면 영구보존됨, 최대 1440분(24시간), 기본값 20분)',
+    type: 'number',
+    format: 'int32',
     example: 20,
     default: 20,
     minimum: 0,

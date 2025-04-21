@@ -40,28 +40,42 @@ export class WriteController {
   }
 
   @Post()
-  @ApiOperation({ summary: '코드 업로드 (텍스트 or 파일 or zip)' })
+  @ApiOperation({ 
+    summary: '코드 업로드 (텍스트 or 파일 or zip)',
+    description: '만료 시간을 0으로 설정하면 영구보존됨으로 저장됩니다.'
+  })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: WriteDto })
+  @ApiBody({ 
+    type: WriteDto,
+    description: '만료 시간(expireMinutes)을 0으로 설정하면 영구보존됨으로 저장됩니다.'
+  })
   @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
-  async uploadWriteData(@Body() body: WriteDto, @UploadedFile() file: Express.Multer.File, @Req() req: Request) {
+  async uploadWriteData(
+    @Body() body: WriteDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
     if (!body.code && !file) {
       throw new BadRequestException('code 또는 file 중 하나는 반드시 있어야 합니다.');
     }
     if (body.code && file) {
       throw new BadRequestException('code와 file은 동시에 보낼 수 없습니다.');
     }
-    if (body.expireMinutes !== undefined && (body.expireMinutes < 0 || body.expireMinutes > 1440)) {
-      throw new BadRequestException('만료 시간은 0(영구보존)에서 1440분(24시간) 사이여야 합니다.');
+    if (body.expireMinutes !== undefined && body.expireMinutes !== 0 && (body.expireMinutes < 0 || body.expireMinutes > 1440)) {
+      throw new BadRequestException('만료 시간은 0(영구보존됨)에서 1440분(24시간) 사이여야 합니다.');
     }
+
     const userIp = await this.getRealIp(req);
-    
+    const expireMinutes = Number(body.expireMinutes ?? 20);
+    console.log('Controller - raw expireMinutes:', body.expireMinutes, typeof body.expireMinutes);
+    console.log('Controller - parsed expireMinutes:', expireMinutes, typeof expireMinutes);
+
     return this.writeService.handleUpload(
-      body.title, 
-      body.code, 
-      file, 
+      body.title,
+      body.code,
+      file,
       userIp,
-      body.expireMinutes
+      expireMinutes,
     );
   }
 }

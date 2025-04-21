@@ -36,7 +36,7 @@ export class WriteGetService {
     if (result.expireAt) {
       result.expireAt = this.formatToKoreanTime(result.expireAt);
     } else {
-      result.expireAt = '영구보존';
+      result.expireAt = '영구보존됨';
     }
     
     if (!result.fileType) {

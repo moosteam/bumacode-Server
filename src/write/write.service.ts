@@ -100,9 +100,9 @@ export class WriteService {
   }
 
   private calculateExpireAt(expireMinutes: number): Date | null {
-    if (expireMinutes === 0) return null; // 영구보존
+    if (expireMinutes === 0) return null; 
     const now = new Date();
-    return new Date(now.getTime() + expireMinutes * 60000); // 분을 밀리초로 변환
+    return new Date(now.getTime() + expireMinutes * 60000);
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -135,6 +135,9 @@ export class WriteService {
     try {
       let type: 'file' | 'zip' | 'binary';
       let publicURL: string;
+      
+      console.log('Service - expireMinutes:', expireMinutes);
+      console.log('Service - isPermanent:', expireMinutes === 0);
       
       if (code) {
         const ext = this.detectExtension(code);
@@ -173,13 +176,19 @@ export class WriteService {
       }
       
       const fullIp = userIp ? this.trimIp(userIp) : null;
-      const expireAt = this.calculateExpireAt(expireMinutes);
+      
+      // expireMinutes가 0이면 영구보존으로 처리
+      const isPermanent = expireMinutes === 0;
       
       const result = await this.writeRepo.query(
-        `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType", "expireAt") 
-         VALUES ($1, $2, $3, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', $4, $5)
-         RETURNING id, title, "filePath", "userIp", "createdAt", "fileType", "expireAt"`,
-        [title, publicURL, fullIp, type, expireAt]
+        isPermanent
+          ? `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType", "expireAt") 
+             VALUES ($1, $2, $3, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', $4, NULL)
+             RETURNING id, title, "filePath", "userIp", "createdAt", "fileType", "expireAt"`
+          : `INSERT INTO "write" (title, "filePath", "userIp", "createdAt", "fileType", "expireAt") 
+             VALUES ($1, $2, $3, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', $4, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul' + ($5 || ' minutes')::interval)
+             RETURNING id, title, "filePath", "userIp", "createdAt", "fileType", "expireAt"`,
+        isPermanent ? [title, publicURL, fullIp, type] : [title, publicURL, fullIp, type, expireMinutes]
       );
       
       if (!result || result.length === 0) {
@@ -187,6 +196,7 @@ export class WriteService {
       }
       
       const savedData = result[0];
+      const expireAtDisplay = savedData.expireAt === null ? '영구보존됨' : this.formatToKoreanTime(savedData.expireAt);
       
       return {
         message: type === 'zip' ? 'ZIP 파일 저장 완료' : (type === 'binary' ? '바이너리 파일 저장 완료' : '파일 저장 완료'),
@@ -197,7 +207,7 @@ export class WriteService {
           filePath: savedData.filePath,
           createdAt: this.formatToKoreanTime(savedData.createdAt),
           userIp: savedData.userIp,
-          expireAt: savedData.expireAt ? this.formatToKoreanTime(savedData.expireAt) : '영구보존',
+          expireAt: expireAtDisplay,
         },
       };
     } catch (err) {
